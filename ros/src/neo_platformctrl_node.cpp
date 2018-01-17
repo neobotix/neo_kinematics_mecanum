@@ -79,10 +79,10 @@ int PlatformCtrlNode::init()
 	n.param<bool>("sendTransform",sendTransform,false);
 	if(sendTransform)
 	{
-		ROS_INFO("platform ctrl node: sending transformation");
+        ROS_INFO("neo_kinematics_mecanum_node: sending transformation");
 	} else {
 
-		ROS_INFO("platform ctrl node: sending no transformation");
+        ROS_INFO("neo_kinematics_mecanum_node: sending no transformation");
 	}
 	n.getParam("kinematics", kinType);
 
@@ -112,7 +112,7 @@ int PlatformCtrlNode::init()
 	}
 	else
 	{
-		ROS_ERROR("neo_PlatformCtrl-Error: unknown kinematic model");
+        ROS_ERROR("neo_kinematics_mecanum_node: unknown kinematic model");
 
 	}
 	if(kin == NULL) return 1;
@@ -164,9 +164,9 @@ void PlatformCtrlNode::receiveOdo(const sensor_msgs::JointState& js)
 
 int main (int argc, char** argv)
 {
-	ros::init(argc, argv, "mecanum_node");
+    ros::init(argc, argv, "neo_kinematics_mecanum_node");
 	PlatformCtrlNode node;
-	if(node.init() != 0) ROS_ERROR("can't initialize neo_platformctrl_node");
+    if(node.init() != 0) ROS_ERROR("neo_kinematics_mecanum_node: init failed!");
 	ros::spin();
 	return 0;
 }

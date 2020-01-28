@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2011, Neobotix GmbH
+ *  Copyright (c) 2020, Neobotix GmbH
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #ifndef neo_diffdrivekinematics_h_
 #define neo_diffdrivekinematics_h_
 
-#include <neo_PlatformCtrl/Kinematics.h>
+#include "Kinematics.h"
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/JointState.h>
 #include <trajectory_msgs/JointTrajectory.h>
@@ -65,11 +65,18 @@ class Mecanum4WKinematics : public Kinematics
 	void setAxis1Length(double dLength);
 	void setAxis2Length(double dLength);
 	void setWheelDiameter(double dDiam);
+	void setStdDev(double dStdDevX, double dStdDevY, double dStdDevZ, double dStdDevRoll, double dStdDevPitch, double dStdDevYaw);
 
    private:
 	double m_dAxis1Length;
 	double m_dAxis2Length;
-	double 	m_dDiam;
+	double m_dDiam;
+	double m_dStdDevX;
+	double m_dStdDevY;
+	double m_dStdDevZ;
+	double m_dStdDevRoll;
+	double m_dStdDevPitch;
+	double m_dStdDevYaw;
 };
 
 

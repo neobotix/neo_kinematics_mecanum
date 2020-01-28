@@ -33,7 +33,7 @@
  *********************************************************************/
 
 
-#include <neo_PlatformCtrl/MecanumKinematics.h>
+#include "../include/neo_PlatformCtrl/MecanumKinematics.h"
 #include <geometry_msgs/Vector3.h>
 
 #define DIFF_PI 3.14159265
@@ -42,6 +42,13 @@ Mecanum4WKinematics::Mecanum4WKinematics()
 {
 	m_dAxis1Length = 0.5;
 	m_dAxis2Length = 0.7;
+	m_dDiam = 0.3;
+	m_dStdDevX = 0.1;
+	m_dStdDevY = 0.1;
+	m_dStdDevZ = 0.1;
+	m_dStdDevRoll = 0.1;
+	m_dStdDevPitch = 0.1;
+	m_dStdDevYaw = 0.1;
 }
 
 void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msgs::Odometry& odom, OdomPose& cpose)
@@ -64,6 +71,15 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 	odom.twist.twist.angular.x = 0;
 	odom.twist.twist.angular.y = 0;
 	odom.twist.twist.angular.z = (-js.velocity[0]+ js.velocity[1]-js.velocity[2]+js.velocity[3]) * m_dDiam / 4 / (m_dAxis1Length + m_dAxis2Length);
+
+	//define cov for twist msg
+	odom.twist.covariance[0] = m_dStdDevX * m_dStdDevX;
+	odom.twist.covariance[7] = m_dStdDevY * m_dStdDevY;
+	odom.twist.covariance[14] = m_dStdDevZ * m_dStdDevZ;
+	odom.twist.covariance[21] = m_dStdDevRoll * m_dStdDevRoll;
+	odom.twist.covariance[28] = m_dStdDevPitch * m_dStdDevPitch;
+	odom.twist.covariance[35] = m_dStdDevYaw * m_dStdDevYaw;
+
 	//positions:
 	double dt = (current_time - last_time).toSec();
 	cpose.xAbs += (odom.twist.twist.linear.x * cos(cpose.phiAbs) - odom.twist.twist.linear.y * sin(cpose.phiAbs)) * dt;
@@ -122,4 +138,14 @@ void Mecanum4WKinematics::setAxis2Length(double dLength)
 void Mecanum4WKinematics::setWheelDiameter(double dDiam)
 {
 	m_dDiam = dDiam;
+}
+
+void Mecanum4WKinematics::setStdDev(double dStdDevX, double dStdDevY, double dStdDevZ, double dStdDevRoll, double dStdDevPitch, double dStdDevYaw)
+{
+	m_dStdDevX = dStdDevX;
+	m_dStdDevY = dStdDevY;
+	m_dStdDevZ = dStdDevZ;
+	m_dStdDevRoll = dStdDevRoll;
+	m_dStdDevPitch = dStdDevPitch;
+	m_dStdDevYaw = dStdDevYaw;
 }

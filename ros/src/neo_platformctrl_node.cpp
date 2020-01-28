@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2011, Neobotix GmbH
+ *  Copyright (c) 2020, Neobotix GmbH
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,8 @@
 #include <ros/ros.h>
 #include <boost/thread.hpp>
 #include <trajectory_msgs/JointTrajectory.h>
-#include <neo_PlatformCtrl/Kinematics.h>
-#include <neo_PlatformCtrl/MecanumKinematics.h>
+#include "../../common/include/neo_PlatformCtrl/Kinematics.h"
+#include "../../common/include/neo_PlatformCtrl/MecanumKinematics.h"
 #include <tf/transform_broadcaster.h>
 
 class PlatformCtrlNode 
@@ -54,7 +54,7 @@ class PlatformCtrlNode
 
 	int init();
 	void receiveCmd(const geometry_msgs::Twist& twist);
-	void receiveOdo(const sensor_msgs::JointState& js);
+	void sendOdom(const sensor_msgs::JointState& js);
 	private:
 	boost::mutex mutex;
 	OdomPose p;
@@ -72,10 +72,11 @@ PlatformCtrlNode::~PlatformCtrlNode()
        if( kin != NULL ) delete kin;
 }
 
-
 int PlatformCtrlNode::init()
 {
-	std::string kinType;
+
+	double devX, devY, devZ, devRoll, devPitch, devYaw;
+
 	n.param<bool>("sendTransform",sendTransform,false);
 	if(sendTransform)
 	{
@@ -84,41 +85,103 @@ int PlatformCtrlNode::init()
 
         ROS_INFO("neo_kinematics_mecanum_node: sending no transformation");
 	}
-	n.getParam("kinematics", kinType);
 
-	if (kinType == "Mecanum4W")
+	double wheelDiameter, axisLength, axisWidth;
+	Mecanum4WKinematics* mecKin = new Mecanum4WKinematics;
+	kin = mecKin;
+	if(n.hasParam("wheelDiameter"))
 	{
-		double wheelDiameter, axisLength, axisWidth;
-		Mecanum4WKinematics* mecKin = new Mecanum4WKinematics;
-		kin = mecKin;
-		if(n.hasParam("wheelDiameter"))
-		{
-			n.getParam("wheelDiameter",wheelDiameter);
-			mecKin->setWheelDiameter(wheelDiameter);
-		}
-		else mecKin->setWheelDiameter(0.3);
-		if(n.hasParam("robotWidth"))
-		{
-			n.getParam("robotWidth",axisWidth);
-			mecKin->setAxis1Length(axisWidth);
-		}
-		else mecKin->setAxis1Length(0.5);
-		if(n.hasParam("robotLength"))
-		{
-			n.getParam("robotLength",axisLength);
-			mecKin->setAxis2Length(axisLength);
-		}
-		else mecKin->setAxis2Length(0.5);
+		n.getParam("wheelDiameter",wheelDiameter);
+		mecKin->setWheelDiameter(wheelDiameter);
 	}
-	else
+	else 
 	{
-        ROS_ERROR("neo_kinematics_mecanum_node: unknown kinematic model");
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter wheelDiameter not set, using default 0.3");
+		mecKin->setWheelDiameter(0.3);
+	}
+	if(n.hasParam("robotWidth"))
+	{
+		n.getParam("robotWidth",axisWidth);
+		mecKin->setAxis1Length(axisWidth);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter robotWidth not set, using default 0.5");
+		mecKin->setAxis1Length(0.5);
+	}
+	if(n.hasParam("robotLength"))
+	{
+		n.getParam("robotLength",axisLength);
+		mecKin->setAxis2Length(axisLength);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter robotLength not set, using default 0.5");
+		mecKin->setAxis2Length(0.5);
+	}
+	////////////////////////////////////
+	if(n.hasParam("devX"))
+	{
+		n.getParam("devX",devX);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter devX not set, using default 0.1");
+		devX = 0.1;
+	}
+	if(n.hasParam("devY"))
+	{
+		n.getParam("devY",devY);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter devY not set, using default 0.1");
+		devY = 0.1;
+	}
+	if(n.hasParam("devZ"))
+	{
+		n.getParam("devZ",devZ);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter devZ not set, using default 0.1");
+		devZ = 0.1;
+	}
+	///////////////////////////////////////
+	if(n.hasParam("devRoll"))
+	{
+		n.getParam("devRoll",devRoll);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter devRoll not set, using default 0.1");
+		devRoll = 0.1;
+	}
+	if(n.hasParam("devPitch"))
+	{
+		n.getParam("devPitch",devPitch);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter devPitch not set, using default 0.1");
+		devPitch = 0.1;
+	}
+	if(n.hasParam("devYaw"))
+	{
+		n.getParam("devYaw",devYaw);
+	}
+	else 
+	{
+		ROS_WARN("neo_kinematics_mecanum_node: Parameter devYaw not set, using default 0.1");
+		devYaw = 0.1;
+	}
 
-	}
+	mecKin->setStdDev(devX, devY, devZ, devRoll, devPitch, devYaw);
+	
 	if(kin == NULL) return 1;
 	p.xAbs = 0; p.yAbs = 0; p.phiAbs = 0;
 	topicPub_Odometry = n.advertise<nav_msgs::Odometry>("/odom",1);	
-    topicSub_DriveState = n.subscribe("/drives/joint_states",1,&PlatformCtrlNode::receiveOdo, this);
+    topicSub_DriveState = n.subscribe("/drives/joint_states",1,&PlatformCtrlNode::sendOdom, this);
     topicPub_DriveCommands = n.advertise<trajectory_msgs::JointTrajectory>("/drives/joint_trajectory",1);
 	topicSub_ComVel = n.subscribe("/cmd_vel",1,&PlatformCtrlNode::receiveCmd, this);
 	return 0;
@@ -135,10 +198,14 @@ void PlatformCtrlNode::receiveCmd(const geometry_msgs::Twist& twist)
    mutex.unlock();
 }
 
-void PlatformCtrlNode::receiveOdo(const sensor_msgs::JointState& js)
+void PlatformCtrlNode::sendOdom(const sensor_msgs::JointState& js)
 {
+
    mutex.lock();
-	//odometry msgs
+    //check if js has data from 4 motors
+	if(sizeof(js.velocity) < 4)
+		return;
+	//odometry msg
 	nav_msgs::Odometry odom;
 	odom.header.stamp = ros::Time::now();
 	odom.header.frame_id = "odom";

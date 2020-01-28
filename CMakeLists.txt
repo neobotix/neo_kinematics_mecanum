@@ -3,7 +3,7 @@ project(neo_kinematics_mecanum)
 
 find_package(catkin REQUIRED COMPONENTS
  nav_msgs
- #roscpp
+ roscpp
  #rostest
  tf 
  std_msgs
@@ -44,8 +44,8 @@ add_library(${PROJECT_NAME} common/src/Mecanum4WKinematics.cpp)
 
 add_executable(neo_kinematics_mecanum_node ros/src/neo_platformctrl_node.cpp)
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencpp)
-add_dependencies(neo_kinematics_mecanum_node ${PROJECT_NAME}_gencpp)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+add_dependencies(neo_kinematics_mecanum_node ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(neo_kinematics_mecanum_node ${PROJECT_NAME})
 target_link_libraries(neo_kinematics_mecanum_node ${catkin_LIBRARIES})

@@ -36,7 +36,6 @@
 #include "../include/neo_PlatformCtrl/MecanumKinematics.h"
 #include <geometry_msgs/Vector3.h>
 
-#define DIFF_PI 3.14159265
 
 Mecanum4WKinematics::Mecanum4WKinematics()
 {
@@ -65,12 +64,12 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 		| wz |       | -1/l  1/l -1/l  1/l  |   | w4 |
 	*/
 	//velocities:
-	odom.twist.twist.linear.x = (js.velocity[0] +  js.velocity[1] + js.velocity[2] +  js.velocity[3]) * m_dDiam / 8;
-	odom.twist.twist.linear.y = (js.velocity[1] -  js.velocity[0] - js.velocity[3] +  js.velocity[2]) * m_dDiam / 8;
+	odom.twist.twist.linear.x = (js.velocity[0] + js.velocity[1] + js.velocity[2] + js.velocity[3]) * m_dDiam / 8;
+	odom.twist.twist.linear.y = (js.velocity[1] - js.velocity[0] - js.velocity[3] + js.velocity[2]) * m_dDiam / 8;
 	odom.twist.twist.linear.z = 0;
 	odom.twist.twist.angular.x = 0;
 	odom.twist.twist.angular.y = 0;
-	odom.twist.twist.angular.z = (-js.velocity[0]+ js.velocity[1]-js.velocity[2]+js.velocity[3]) * m_dDiam / 4 / (m_dAxis1Length + m_dAxis2Length);
+	odom.twist.twist.angular.z = (-js.velocity[0] + js.velocity[1] - js.velocity[2] + js.velocity[3]) * m_dDiam / 4 / (m_dAxis1Length + m_dAxis2Length);
 
 	//define cov for twist msg
 	odom.twist.covariance[0] = m_dStdDevX * m_dStdDevX;
@@ -85,10 +84,12 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 	cpose.xAbs += (odom.twist.twist.linear.x * cos(cpose.phiAbs) - odom.twist.twist.linear.y * sin(cpose.phiAbs)) * dt;
 	cpose.yAbs += (odom.twist.twist.linear.x * sin(cpose.phiAbs) + odom.twist.twist.linear.y * cos(cpose.phiAbs)) * dt;
 	cpose.phiAbs += odom.twist.twist.angular.z * dt;
+
 	odom.pose.pose.position.x = cpose.xAbs;
 	odom.pose.pose.position.y = cpose.yAbs;
 	odom.pose.pose.position.z = 0;
 	odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(cpose.phiAbs);
+
 	last_time = current_time;
 }
 
@@ -108,18 +109,18 @@ void Mecanum4WKinematics::execInvKin(const geometry_msgs::Twist& twist, trajecto
 	point.velocities.resize(4);
 	// w1:
 	traj.joint_names.push_back("wheel_front_left_base_link");
-	point.velocities[0] = 2 / m_dDiam * ( twist.linear.x - twist.linear.y - (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z); 
+	point.velocities[0] = 2 / m_dDiam * ( twist.linear.x - twist.linear.y - (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z);
 	// w2:
 	traj.joint_names.push_back("wheel_front_right_base_link");
-	point.velocities[1] = 2 / m_dDiam * ( twist.linear.x + twist.linear.y + (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z); 
+	point.velocities[1] = 2 / m_dDiam * ( twist.linear.x + twist.linear.y + (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z);
 	// w3:
 	traj.joint_names.push_back("wheel_back_left_base_link");
-	point.velocities[2] = 2 / m_dDiam * ( twist.linear.x + twist.linear.y - (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z); 
+	point.velocities[2] = 2 / m_dDiam * ( twist.linear.x + twist.linear.y - (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z);
 	// w4:
 	traj.joint_names.push_back("wheel_back_right_base_link");
-	point.velocities[3] = 2 / m_dDiam * ( twist.linear.x - twist.linear.y + (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z); 
+	point.velocities[3] = 2 / m_dDiam * ( twist.linear.x - twist.linear.y + (m_dAxis1Length + m_dAxis2Length) / 2 * twist.angular.z);
 	traj.points.push_back(point);
-	
+
 }
 
 

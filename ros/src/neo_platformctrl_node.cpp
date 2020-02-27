@@ -207,7 +207,7 @@ void PlatformCtrlNode::sendOdom(const sensor_msgs::JointState& js)
 		return;
 	//odometry msg
 	nav_msgs::Odometry odom;
-	odom.header.stamp = ros::Time::now();
+	odom.header.stamp = js.header.stamp;
 	odom.header.frame_id = "odom";
 	odom.child_frame_id = "base_link";
 	kin->execForwKin(js, odom, p);

@@ -53,7 +53,7 @@ Mecanum4WKinematics::Mecanum4WKinematics()
 
 void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msgs::Odometry& odom, OdomPose& cpose)
 {
-	current_time = ros::Time::now();
+	current_time = js.header.stamp;
 
 	/* See "Omnidirectional Mobile Robot -Design and Implementation": Ioan Doroftei, Victor Grosu and Veaceslav Spinu
 

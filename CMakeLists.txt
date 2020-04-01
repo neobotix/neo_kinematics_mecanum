@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(neo_kinematics_mecanum)
 
+set(CMAKE_CXX_STANDARD 11)
+
 find_package(catkin REQUIRED COMPONENTS
  nav_msgs
  roscpp
@@ -42,7 +44,7 @@ include_directories(common/include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} common/src/Mecanum4WKinematics.cpp)
 
-add_executable(neo_kinematics_mecanum_node ros/src/neo_platformctrl_node.cpp)
+add_executable(neo_kinematics_mecanum_node ros/src/neo_kinematics_mecanum_node.cpp)
 
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 add_dependencies(neo_kinematics_mecanum_node ${catkin_EXPORTED_TARGETS})

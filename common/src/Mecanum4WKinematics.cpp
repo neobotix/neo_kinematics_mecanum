@@ -33,7 +33,8 @@
  *********************************************************************/
 
 
-#include "../include/neo_PlatformCtrl/MecanumKinematics.h"
+#include "../include/MecanumKinematics.h"
+
 #include <geometry_msgs/Vector3.h>
 
 

@@ -125,8 +125,9 @@ void PlatformCtrlNode::sendOdom(const sensor_msgs::JointState& js)
 	boost::lock_guard<boost::mutex> lock(mutex);
 
     //check if js has data from 4 motors
-	if(sizeof(js.velocity) < 4)
+	if(js.velocity.size() < 4) {
 		return;
+	}
 
 	//odometry msg
 	nav_msgs::Odometry odom;

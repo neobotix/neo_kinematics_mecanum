@@ -48,21 +48,16 @@ typedef struct {
 	double phiAbs;
 } OdomPose;
 
-class Kinematics 
-{
-   public:
-	Kinematics();
-	virtual void execForwKin(const sensor_msgs::JointState& js, nav_msgs::Odometry& odom, OdomPose& cpose){};
-	virtual void execInvKin(const geometry_msgs::Twist& twist, trajectory_msgs::JointTrajectory& traj){};
-   protected:
+class Kinematics {
+public:
+	virtual void execForwKin(const sensor_msgs::JointState& js, nav_msgs::Odometry& odom, OdomPose& cpose) {};
+	virtual void execInvKin(const geometry_msgs::Twist& twist, trajectory_msgs::JointTrajectory& traj) {};
+
+protected:
 	ros::Time current_time, last_time;
+	nav_msgs::Odometry last_odom;
 
 };
-
-Kinematics::Kinematics(){
-	current_time = ros::Time::now();
-	last_time = ros::Time::now();
-}
 
 
 #endif //neo_kinematics_h_

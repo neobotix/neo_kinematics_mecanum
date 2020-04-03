@@ -80,9 +80,9 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 		if(dt > 0 && dt < 1)
 		{
 			// compute second order midpoint velocities
-			const double vel_x_mid = 0.5 * (move_vel_x + odom.twist.twist.linear.x);
-			const double vel_y_mid = 0.5 * (move_vel_y + odom.twist.twist.linear.y);
-			const double yawrate_mid = 0.5 * (move_yawrate + odom.twist.twist.angular.z);
+			const double vel_x_mid = 0.5 * (move_vel_x + last_odom.twist.twist.linear.x);
+			const double vel_y_mid = 0.5 * (move_vel_y + last_odom.twist.twist.linear.y);
+			const double yawrate_mid = 0.5 * (move_yawrate + last_odom.twist.twist.angular.z);
 
 			// compute midpoint yaw angle
 			const double yaw_mid = cpose.phiAbs + 0.5 * yawrate_mid * dt;
@@ -121,6 +121,7 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 	odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(cpose.phiAbs);
 
 	last_time = current_time;
+	last_odom = odom;
 }
 
 void Mecanum4WKinematics::execInvKin(const geometry_msgs::Twist& twist, trajectory_msgs::JointTrajectory& traj)

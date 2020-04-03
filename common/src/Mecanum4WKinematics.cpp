@@ -64,13 +64,48 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 		| vy | = R/4 | -1     1    1   -1   |   | w3 |
 		| wz |       | -1/l  1/l -1/l  1/l  |   | w4 |
 	*/
+
 	//velocities:
-	odom.twist.twist.linear.x = (js.velocity[0] + js.velocity[1] + js.velocity[2] + js.velocity[3]) * m_dDiam / 8;
-	odom.twist.twist.linear.y = (js.velocity[1] - js.velocity[0] - js.velocity[3] + js.velocity[2]) * m_dDiam / 8;
+	const double move_vel_x = (js.velocity[0] + js.velocity[1] + js.velocity[2] + js.velocity[3]) * m_dDiam / 8;
+	const double move_vel_y = (js.velocity[1] - js.velocity[0] - js.velocity[3] + js.velocity[2]) * m_dDiam / 8;
+	const double move_yawrate = (-js.velocity[0] + js.velocity[1] - js.velocity[2] + js.velocity[3]) * m_dDiam / 4
+									/ (m_dAxis1Length + m_dAxis2Length);
+
+	//positions:
+	if(!last_time.is_zero())
+	{
+		double dt = (current_time - last_time).toSec();
+
+		// check for valid delta time
+		if(dt > 0 && dt < 1)
+		{
+			// compute second order midpoint velocities
+			const double vel_x_mid = 0.5 * (move_vel_x + odom.twist.twist.linear.x);
+			const double vel_y_mid = 0.5 * (move_vel_y + odom.twist.twist.linear.y);
+			const double yawrate_mid = 0.5 * (move_yawrate + odom.twist.twist.angular.z);
+
+			// compute midpoint yaw angle
+			const double yaw_mid = cpose.phiAbs + 0.5 * yawrate_mid * dt;
+
+			// integrate position using midpoint velocities and yaw angle
+			cpose.xAbs += vel_x_mid * dt * cos(yaw_mid) + vel_y_mid * dt * -sin(yaw_mid);
+			cpose.yAbs += vel_x_mid * dt * sin(yaw_mid) + vel_y_mid * dt * cos(yaw_mid);
+
+			// integrate yaw angle using midpoint yawrate
+			cpose.phiAbs += yawrate_mid * dt;
+		}
+		else
+		{
+			ROS_WARN_STREAM("invalid joint state delta time: " << dt << " sec");
+		}
+	}
+
+	odom.twist.twist.linear.x = move_vel_x;
+	odom.twist.twist.linear.y = move_vel_y;
 	odom.twist.twist.linear.z = 0;
 	odom.twist.twist.angular.x = 0;
 	odom.twist.twist.angular.y = 0;
-	odom.twist.twist.angular.z = (-js.velocity[0] + js.velocity[1] - js.velocity[2] + js.velocity[3]) * m_dDiam / 4 / (m_dAxis1Length + m_dAxis2Length);
+	odom.twist.twist.angular.z = move_yawrate;
 
 	//define cov for twist msg
 	odom.twist.covariance[0] = m_dStdDevX * m_dStdDevX;
@@ -79,12 +114,6 @@ void Mecanum4WKinematics::execForwKin(const sensor_msgs::JointState& js, nav_msg
 	odom.twist.covariance[21] = m_dStdDevRoll * m_dStdDevRoll;
 	odom.twist.covariance[28] = m_dStdDevPitch * m_dStdDevPitch;
 	odom.twist.covariance[35] = m_dStdDevYaw * m_dStdDevYaw;
-
-	//positions:
-	double dt = (current_time - last_time).toSec();
-	cpose.xAbs += (odom.twist.twist.linear.x * cos(cpose.phiAbs) - odom.twist.twist.linear.y * sin(cpose.phiAbs)) * dt;
-	cpose.yAbs += (odom.twist.twist.linear.x * sin(cpose.phiAbs) + odom.twist.twist.linear.y * cos(cpose.phiAbs)) * dt;
-	cpose.phiAbs += odom.twist.twist.angular.z * dt;
 
 	odom.pose.pose.position.x = cpose.xAbs;
 	odom.pose.pose.position.y = cpose.yAbs;

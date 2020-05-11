@@ -46,12 +46,19 @@ add_library(${PROJECT_NAME} common/src/Mecanum4WKinematics.cpp)
 
 add_executable(neo_kinematics_mecanum_node ros/src/neo_kinematics_mecanum_node.cpp)
 
+
+add_executable(neo_kinematics_mecanum_sim_node ros/src/neo_kinematics_mecanum_sim_node.cpp)
+
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 add_dependencies(neo_kinematics_mecanum_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(neo_kinematics_mecanum_sim_node ${catkin_EXPORTED_TARGETS})
+
 
 target_link_libraries(neo_kinematics_mecanum_node ${PROJECT_NAME})
 target_link_libraries(neo_kinematics_mecanum_node ${catkin_LIBRARIES})
 
+target_link_libraries(neo_kinematics_mecanum_sim_node ${PROJECT_NAME})
+target_link_libraries(neo_kinematics_mecanum_sim_node ${catkin_LIBRARIES})
 
 #target_link_libraries(neo_platformctrl_diff_node thread)
 
